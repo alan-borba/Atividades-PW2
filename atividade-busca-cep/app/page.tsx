@@ -1,80 +1,100 @@
-  'use client'
+'use client'
 
-  import { useState } from 'react'
+import { useState } from 'react'
+import './globals.css'
 
-  function App() {
-    const [cep, setCep] = useState('')
-    const [logradouro, setLogradouro] = useState('')
-    const [numero, setNumero] = useState('')
-    const [bairro, setBairro] = useState('')
-    const [cidade, setCidade] = useState('')
-    const [uf, setUf] = useState('')
-    
-    const buscarCep = async () => {
-      try {
-        setLogradouro("")
-        setNumero("")
-        setBairro("")
-        setCidade("")
-        setUf("")
-        
-        const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
-        const dados = await resposta.json()
-        if (dados.erro) {
-          alert('CEP não encontrado!')
-          return
-        }
+function FormularioEndereco() {
+  const [cep, setCep] = useState('')
+  const [logradouro, setLogradouro] = useState('')
+  const [numero, setNumero] = useState('')
+  const [bairro, setBairro] = useState('')
+  const [cidade, setCidade] = useState('')
+  const [uf, setUf] = useState('')
+  const [erroCep, setErroCep] = useState('')
+  
+  const buscarCep = async () => {
+    setErroCep('')
+    const cepLimpo = cep.replace(/\D/g, '')
 
-        setLogradouro(dados.logradouro)
-        setBairro(dados.bairro)
-        setCidade(dados.localidade)
-        setUf(dados.uf)
-      } catch (error) {
-        alert('CEP não encontrado!')
+    if (cepLimpo.length !== 8) {
+      setErroCep('O CEP informado é inválido.')
+      return
+    }
+
+    try {
+      const resposta = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
+      const dados = await resposta.json()
+      
+      if (dados.erro) {
+        setErroCep('CEP não encontrado.')
+        return
       }
 
+      setLogradouro(dados.logradouro)
+      setBairro(dados.bairro)
+      setCidade(dados.localidade)
+      setUf(dados.uf)
+
+      const inputNumero = document.getElementById('numero')
+      if (inputNumero) inputNumero.focus()
+
+    } catch (erro) {
+      setErroCep('Erro ao buscar CEP.')
+    }
   }
 
-    return (
-      <>
-        <h1>Adress</h1>
-        
-        <input type="text"
-          placeholder='Digite o Cep'
-          value={cep}
-          onChange={(e) => setCep(e.target.value)}
-          onBlur={buscarCep}
-        />
-        <input type="text"
-          placeholder='Digite o Logradouro'
-          value={logradouro}
-          onChange={(e) => setLogradouro(e.target.value)}
-        />
-        <input type="text"
-          id="numero"
-          placeholder='Digite o Número'
-          value={numero}
-          onChange={(e) => setNumero(e.target.value)}
-        />
-        <input type="text"
-          placeholder='Digite o Bairro'
-          value={bairro}
-          onChange={(e) => setBairro(e.target.value)}
-        />
-        <input type="text"
-          placeholder='Digite o Cidade'
-          value={cidade}
-          onChange={(e) => setCidade(e.target.value)}
-        />
-        <input type="text"
-          placeholder='Digite o UF'
-          value={uf}
-          onChange={(e) => setUf(e.target.value)}
-        />
-      </>
+  return (
+    <div className="cartao-formulario">
+      <h1>Endereço</h1>
       
-    )
+      <div>
+          <input type="text"
+            placeholder='CEP'
+            value={cep}
+            className={erroCep ? 'input-erro' : ''}
+            onChange={(e) => {
+                setCep(e.target.value)
+                setErroCep('')
+                setLogradouro('')
+                setNumero('')
+                setBairro('')
+                setCidade('')
+                setUf('')
+            }}
+            onBlur={buscarCep}
+            maxLength={9} 
+          />
+          {erroCep && <p className="mensagem-erro">{erroCep}</p>}
+      </div>
 
-  }
+      <input type="text"
+        placeholder='Rua / Logradouro'
+        value={logradouro}
+        onChange={(e) => setLogradouro(e.target.value)}
+      />
+      <input type="text"
+        id="numero"
+        placeholder='Número'
+        value={numero}
+        onChange={(e) => setNumero(e.target.value)}
+      />
+      <input type="text"
+        placeholder='Bairro'
+        value={bairro}
+        onChange={(e) => setBairro(e.target.value)}
+      />
+      <input type="text"
+        placeholder='Cidade'
+        value={cidade}
+        onChange={(e) => setCidade(e.target.value)}
+      />
+      <input type="text"
+        placeholder='Estado (UF)'
+        value={uf}
+        onChange={(e) => setUf(e.target.value)}
+      />
+    </div>
+  )
+}
 
-  export default App
+export default FormularioEndereco
